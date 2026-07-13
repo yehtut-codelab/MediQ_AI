@@ -1,0 +1,29 @@
+{
+  "features": [
+    "queue_depth_mean",
+    "n_arrivals",
+    "waiting_time_mean",
+    "hour_of_day",
+    "day_of_week",
+    "month",
+    "cat_encoded",
+    "is_weekend"
+  ],
+  "n_features": 8,
+  "target": "queue_depth_mean",
+  "lookback_steps": 8,
+  "horizon_steps": 4,
+  "bucket_minutes": 15,
+  "train_cutoff": "2025-07-30",
+  "architecture": {
+    "hidden1": 64,
+    "hidden2": 32,
+    "dropout": 0.2
+  },
+  "evaluation": {
+    "val_MAE": 2.113,
+    "val_RMSE": 3.016,
+    "baseline_MAE": 4.288,
+    "mae_improvement_pct": 50.72
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "n_states": 3,
+  "covariance_type": "full",
+  "n_iter": 100,
+  "train_cutoff": "2025-07-30",
+  "models_trained": 9,
+  "categories": [
+    {
+      "category": "visual_acuity",
+      "n_samples": 94911,
+      "state_means": {
+        "Low": 2.18,
+        "Medium": 8.21,
+        "High": 29.78
+      },
+      "status": "ok"
+    },
+    {
+      "category": "consultation",
+      "n_samples": 116766,
+      "state_means": {
+        "Low": 8.93,
+        "Medium": 38.24,
+        "High": 86.16
+      },
+      "status": "ok"
+    },
+    {
+      "category": "diagnostic_scan",
+      "n_samples": 51095,
+      "state_means": {
+        "Low": 4.29,
+        "Medium": 14.45,
+        "High": 32.62
+      },
+      "status": "ok"
+    },
+    {
+      "category": "biometry",
+      "n_samples": 8649,
+      "state_means": {
+        "Low": 3.93,
+        "Medium": 16.57,
+        "High": 44.28
+      },
+      "status": "ok"
+    },
+    {
+      "category": "visual_field_test",
+      "n_samples": 15807,
+      "state_means": {
+        "Low": 4.31,
+        "Medium": 13.93,
+        "High": 41.21
+      },
+      "status": "ok"
+    },
+    {
+      "category": "refraction",
+      "n_samples": 12646,
+      "state_means": {
+        "Medium": 8.78,
+        "Low": 1.64,
+        "High": 30.87
+      },
+      "status": "ok"
+    },
+    {
+      "category": "laser_procedure",
+      "n_samples": 1752,
+      "state_means": {
+        "Medium": 7.47,
+        "High": 38.79,
+        "Low": 2.21
+      },
+      "status": "ok"
+    },
+    {
+      "category": "treatment",
+      "n_samples": 2349,
+      "state_means": {
+        "Medium": 11.61,
+        "High": 29.6,
+        "Low": 3.7
+      },
+      "status": "ok"
+    },
+    {
+      "category": "other",
+      "n_samples": 17470,
+      "state_means": {
+        "Low": 3.21,
+        "Medium": 14.38,
+        "High": 53.76
+      },
+      "status": "ok"
+    }
+  ]
+}

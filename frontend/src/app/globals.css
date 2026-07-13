@@ -1,0 +1,173 @@
+/* TTSH digital-twin palette (from ttsh_eye_clinic_digital_twin_v3_2.html) */
+:root {
+  --ttsh-navy: #003366;
+  --ttsh-blue: #0057A8;
+  --ttsh-blue-l: #E8F0F9;
+  --ttsh-red: #C8102E;
+  --ttsh-red-l: #FDEDF0;
+  --ttsh-gold: #B8860B;
+  --ttsh-gold-l: #FDF6E3;
+  --ttsh-green: #1A6B3C;
+  --ttsh-green-l: #E8F5EE;
+  --border: #D8D8D2;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Noto Sans", sans-serif;
+  background: #EEF1F5;
+  color: #1A1A1A;
+  font-size: 14px;
+}
+
+.ttsh-nav {
+  background: var(--ttsh-navy);
+  border-bottom: 3px solid var(--ttsh-red);
+  padding: 12px 32px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.nav-links { display: flex; gap: 20px; }
+.nav-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+}
+.nav-links a:hover { color: white; border-bottom: 2px solid var(--ttsh-red); }
+.logo-name { font-weight: 600; font-size: 15px; }
+.logo-sub { font-size: 12px; font-weight: 500; opacity: 0.82; letter-spacing: 0.2px; }
+
+.page { max-width: 960px; margin: 24px auto; padding: 0 24px; }
+
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.panel-head {
+  background: var(--ttsh-navy);
+  color: white;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.panel-body { padding: 16px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+label { display: block; font-size: 11px; color: #555; margin-bottom: 4px; font-weight: 500; }
+select, input {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: 3px; font-size: 13px; font-family: inherit;
+}
+button.primary {
+  grid-column: 1 / -1;
+  padding: 10px; background: var(--ttsh-navy); color: white;
+  border: none; border-radius: 3px; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+button.primary:hover { background: var(--ttsh-blue); }
+button.secondary {
+  grid-column: 1 / -1;
+  padding: 10px; background: white; color: var(--ttsh-navy);
+  border: 1px solid var(--ttsh-navy); border-radius: 3px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+}
+button.secondary:hover { background: var(--ttsh-blue-l); border-color: var(--ttsh-blue); color: var(--ttsh-blue); }
+
+/* KPI number scale — one primary size, one secondary size, used everywhere
+   instead of ad hoc inline font-sizes so every "big number" reads at a
+   consistent visual weight across pages. */
+.estimate-value, .kpi-primary { font-size: 42px; font-weight: 300; font-family: "Noto Serif", serif; }
+.kpi-secondary { font-size: 22px; margin-top: 6px; }
+.band-green { color: var(--ttsh-green); }
+.band-amber { color: var(--ttsh-gold); }
+.band-red { color: var(--ttsh-red); }
+
+/* Redundant color+text status chip — pairs with band-*/status colors so
+   severity never depends on hue alone (colorblind-safe). */
+.band-chip {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px; margin-left: 8px; vertical-align: middle;
+}
+.band-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+.band-chip.green { background: var(--ttsh-green-l); color: var(--ttsh-green); }
+.band-chip.green::before { background: var(--ttsh-green); }
+.band-chip.amber { background: var(--ttsh-gold-l); color: var(--ttsh-gold); }
+.band-chip.amber::before { background: var(--ttsh-gold); }
+.band-chip.red { background: var(--ttsh-red-l); color: var(--ttsh-red); }
+.band-chip.red::before { background: var(--ttsh-red); }
+
+.estimate-card { border-left: 4px solid var(--border); padding: 14px 16px; border-radius: 3px; }
+.estimate-card.green { background: var(--ttsh-green-l); border-left-color: var(--ttsh-green); }
+.estimate-card.amber { background: var(--ttsh-gold-l); border-left-color: var(--ttsh-gold); }
+.estimate-card.red { background: var(--ttsh-red-l); border-left-color: var(--ttsh-red); }
+
+/* SOP Q&A */
+.qa-banner {
+  background: var(--ttsh-gold-l); border-left: 3px solid var(--ttsh-gold);
+  padding: 9px 12px; border-radius: 3px; font-size: 11px; margin-bottom: 12px;
+}
+.qa-banner code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 2px; }
+.qa-thread { max-height: 420px; overflow-y: auto; }
+.qa-msg { padding: 10px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 13px; }
+.qa-msg.user { background: var(--ttsh-blue-l); margin-left: 15%; }
+.qa-msg.assistant { background: #F4F4F2; margin-right: 15%; }
+.qa-role { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #777; margin-bottom: 4px; }
+.qa-chip {
+  display: inline-block; margin-top: 8px; font-size: 10px;
+  background: var(--ttsh-gold-l); color: var(--ttsh-gold);
+  border: 1px solid #E0C97A; border-radius: 2px; padding: 1px 8px;
+}
+.qa-source {
+  font-size: 11px; padding: 6px 10px; background: white;
+  border: 1px solid var(--border); border-radius: 3px; margin-bottom: 4px;
+}
+
+/* agent console alerts */
+.alert-row {
+  padding: 9px 12px; margin-bottom: 6px; border-radius: 3px;
+  border-left: 3px solid; font-size: 12px;
+}
+.alert-row.crit { background: var(--ttsh-red-l); border-left-color: var(--ttsh-red); }
+.alert-row.warn { background: var(--ttsh-gold-l); border-left-color: var(--ttsh-gold); }
+
+/* stations dashboard */
+.clinic-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.tab {
+  padding: 6px 14px; font-size: 12px; font-weight: 500; cursor: pointer;
+  background: white; color: var(--ttsh-navy);
+  border: 1px solid var(--border); border-radius: 3px;
+}
+.tab.active { background: var(--ttsh-navy); color: white; border-color: var(--ttsh-navy); }
+
+.station-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.station-card {
+  border: 1px solid var(--border); border-top: 3px solid var(--border);
+  border-radius: 4px; padding: 12px 14px; background: white;
+}
+.station-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #555; margin-bottom: 6px; }
+.station-median { font-size: 26px; font-weight: 300; font-family: "Noto Serif", serif; line-height: 1.1; margin-bottom: 4px; }
+.station-reg {
+  display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 600;
+  background: var(--ttsh-blue-l); color: var(--ttsh-blue);
+  border-radius: 2px; padding: 2px 8px;
+}
+.hourly-bars { display: flex; align-items: flex-end; gap: 2px; height: 44px; margin-top: 10px; }
+.hourly-bar { flex: 1; border-radius: 1px 1px 0 0; min-width: 4px; }
+.hourly-axis { display: flex; justify-content: space-between; font-size: 9px; color: #999; margin-top: 2px; }
+
+.evidence-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+.evidence-table th {
+  background: #F4F4F2; text-align: left; padding: 6px 8px;
+  font-size: 10px; text-transform: uppercase; color: #555;
+  border-bottom: 1px solid var(--border);
+}
+.evidence-table td { padding: 6px 8px; border-bottom: 1px solid #E8E8E4; }
+.muted { color: #777; font-size: 12px; }
