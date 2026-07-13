@@ -78,3 +78,4 @@ ANTHROPIC_API_KEY=            # optional — template fallback without it
 ```
 "# MediQ_AI" 
 "# MediQ_AI" 
+"# MediQ_AI" 
