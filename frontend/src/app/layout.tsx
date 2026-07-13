@@ -2,7 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "TTSH Eye Clinic — Queue & Wait Advisor",
+  title: "MediQ AI — Queue & Wait Advisor",
   description: "RAG-based wait time estimates from historical visit events",
 };
 
@@ -10,9 +10,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <nav className="ttsh-nav">
+        <nav className="mediq-nav">
           <div>
-            <div className="logo-name">Tan Tock Seng Hospital</div>
+            <div className="logo-name">MediQ AI</div>
             <div className="logo-sub">AI-Driven Digital Twin for Eye Clinic</div>
           </div>
           <div className="nav-links">

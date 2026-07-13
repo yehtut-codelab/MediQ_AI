@@ -1,4 +1,4 @@
-"""Mine empirical patient pathways from the TTSH wait time export.
+"""Mine empirical patient pathways from the wait time export.
 
 Groups station-visit events by (patient, day), orders them by wait start,
 and aggregates the observed service-type sequences plus per-station wait and

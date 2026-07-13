@@ -1,5 +1,5 @@
 """Supervisor/Orchestrator multi-agent graph — implements the Agentic AI Framework
-from TTSH_AI_Agents_Architecture_Manuscript_Version.png (Figure 2).
+from MediQ_AI_Agents_Architecture.png (Figure 2).
 
                     ┌─ waiting_time_agent ──┐
 supervisor ─ fan-out┼─ bottleneck_agent ────┼─ result_fusion ─ critique

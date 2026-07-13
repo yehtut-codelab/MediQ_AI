@@ -41,9 +41,9 @@ type Report = {
 };
 
 const STATE_COLOR: Record<string, string> = {
-  High: "var(--ttsh-red)",
-  Medium: "var(--ttsh-gold)",
-  Low: "var(--ttsh-green)",
+  High: "var(--mediq-red)",
+  Medium: "var(--mediq-gold)",
+  Low: "var(--mediq-green)",
   unknown: "#999",
 };
 
@@ -120,7 +120,7 @@ export default function AgentConsole() {
                 : "Run Multi-Agent Analysis"}
             </button>
           </div>
-          {error && <p style={{ color: "var(--ttsh-red)", marginTop: 10 }}>{error}</p>}
+          {error && <p style={{ color: "var(--mediq-red)", marginTop: 10 }}>{error}</p>}
         </div>
       </div>
 
@@ -233,7 +233,7 @@ export default function AgentConsole() {
                       title={`+${(i + 1) * 15} min: ${v}`}
                       style={{
                         height: `${Math.max(4, (v / max) * 40)}px`,
-                        background: "var(--ttsh-blue)",
+                        background: "var(--mediq-blue)",
                       }}
                     />
                   );
@@ -259,7 +259,7 @@ export default function AgentConsole() {
                 <tbody>
                   {report.recommendations.map((r, i) => (
                     <tr key={i}>
-                      <td style={{ fontWeight: 700, color: r.priority === 1 ? "var(--ttsh-red)" : r.priority === 2 ? "var(--ttsh-gold)" : "inherit" }}>
+                      <td style={{ fontWeight: 700, color: r.priority === 1 ? "var(--mediq-red)" : r.priority === 2 ? "var(--mediq-gold)" : "inherit" }}>
                         {r.priority}
                       </td>
                       <td>{r.recommendation}</td>

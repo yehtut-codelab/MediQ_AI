@@ -74,7 +74,7 @@ export default function SopQA() {
                     <li key={q} style={{ marginBottom: 6 }}>
                       <a
                         href="#"
-                        style={{ color: "var(--ttsh-blue)" }}
+                        style={{ color: "var(--mediq-blue)" }}
                         onClick={(e) => {
                           e.preventDefault();
                           ask(q);

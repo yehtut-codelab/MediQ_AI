@@ -1,4 +1,4 @@
-"""Load the TTSH wait time Excel export and clean it per spec DQ-1..DQ-5."""
+"""Load the wait time Excel export and clean it per spec DQ-1..DQ-5."""
 
 import re
 from pathlib import Path

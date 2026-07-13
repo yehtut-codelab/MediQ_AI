@@ -1,6 +1,6 @@
 """Pathway prediction: presentation -> visit archetype -> empirical station sequence.
 
-Archetypes map to sequences actually observed in the TTSH export (mined by
+Archetypes map to sequences actually observed in the wait time export (mined by
 scripts/mine_pathways.py into data/pathways.json). Per-station expected wait
 and service durations come from the mined station statistics, so the projected
 timeline is grounded in the same evidence base as the wait estimates.

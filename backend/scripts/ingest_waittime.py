@@ -1,4 +1,4 @@
-"""Ingest the TTSH wait time Excel export into Qdrant.
+"""Ingest the wait time Excel export into Qdrant.
 
 Usage:
     python scripts/ingest_waittime.py                # full dataset

@@ -1,6 +1,6 @@
 // Standard ophthalmic presentation options for the Diagnosis / Medical History /
 // Current Issue fields. These are *suggestions* only — every field stays free text,
-// this just gives staff a fast pick-list of common TTSH Eye Centre presentations.
+// this just gives staff a fast pick-list of common eye centre presentations.
 //
 // The Current Issue options are deliberately phrased to match the red-flag and
 // archetype keyword rules in backend/app/services/triage.py and pathway.py, so

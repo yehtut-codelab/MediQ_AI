@@ -56,15 +56,15 @@ type RegisteredPatient = {
 };
 
 const PRIORITY_COLOR: Record<number, string> = {
-  1: "var(--ttsh-red, #c0392b)",
+  1: "var(--mediq-red, #c0392b)",
   2: "#b9770e",
   3: "#1e8449",
 };
 
 const CONGESTION_COLOR: Record<string, string> = {
-  High: "var(--ttsh-red)",
-  Medium: "var(--ttsh-gold)",
-  Low: "var(--ttsh-green)",
+  High: "var(--mediq-red)",
+  Medium: "var(--mediq-gold)",
+  Low: "var(--mediq-green)",
   unknown: "#999",
 };
 
@@ -252,7 +252,7 @@ export default function RegisterPatient() {
               {loading ? "Registering patient & computing estimates…" : "Register Patient & Estimate Wait"}
             </button>
           </form>
-          {error && <p style={{ color: "var(--ttsh-red)", marginTop: 10 }}>{error}</p>}
+          {error && <p style={{ color: "var(--mediq-red)", marginTop: 10 }}>{error}</p>}
         </div>
       </div>
 
@@ -364,7 +364,7 @@ export default function RegisterPatient() {
                             title={`+${f.minutes_ahead} min: ${f.queue_depth}`}
                             style={{
                               height: `${Math.max(4, (f.queue_depth / max) * 40)}px`,
-                              background: "var(--ttsh-blue)",
+                              background: "var(--mediq-blue)",
                             }}
                           />
                         );
@@ -416,7 +416,7 @@ export default function RegisterPatient() {
               ))}
             </div>
             <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>
-              Pathway and durations from observed TTSH patient journeys (median per station).
+              Pathway and durations from observed patient journeys (median per station).
             </p>
           </div>
         </div>

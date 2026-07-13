@@ -28,9 +28,9 @@ type QueueSimulation = {
 };
 
 const CONGESTION_COLOR: Record<string, string> = {
-  High: "var(--ttsh-red)",
-  Medium: "var(--ttsh-gold)",
-  Low: "var(--ttsh-green)",
+  High: "var(--mediq-red)",
+  Medium: "var(--mediq-gold)",
+  Low: "var(--mediq-green)",
   unknown: "#999",
 };
 
@@ -296,7 +296,7 @@ export default function ArrivalSimulator() {
               actually waited {sample.actual_wait_min.toFixed(0)} min
             </p>
           )}
-          {error && <p style={{ color: "var(--ttsh-red)", marginTop: 10 }}>{error}</p>}
+          {error && <p style={{ color: "var(--mediq-red)", marginTop: 10 }}>{error}</p>}
         </div>
       </div>
 
@@ -362,7 +362,7 @@ export default function ArrivalSimulator() {
       <div className="panel">
         <div className="panel-head">Simulated Queue State — XGBoost · HMM · LSTM</div>
         <div className="panel-body" aria-live="polite">
-          {simError && <p style={{ color: "var(--ttsh-red)" }}>{simError}</p>}
+          {simError && <p style={{ color: "var(--mediq-red)" }}>{simError}</p>}
           {!simError && !simResult && !loading && (
             <p className="muted">Run "Estimate &amp; Simulate" above to see a result.</p>
           )}
@@ -426,7 +426,7 @@ export default function ArrivalSimulator() {
                           title={`+${f.minutes_ahead} min: ${f.queue_depth}`}
                           style={{
                             height: `${Math.max(4, (f.queue_depth / max) * 40)}px`,
-                            background: "var(--ttsh-blue)",
+                            background: "var(--mediq-blue)",
                           }}
                         />
                       );

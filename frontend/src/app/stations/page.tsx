@@ -21,9 +21,9 @@ type Station = {
 type Overview = Record<string, Station[]>;
 
 const BAND_COLOR = {
-  green: "var(--ttsh-green)",
-  amber: "var(--ttsh-gold)",
-  red: "var(--ttsh-red)",
+  green: "var(--mediq-green)",
+  amber: "var(--mediq-gold)",
+  red: "var(--mediq-red)",
 } as const;
 
 function HourlyBars({ hourly }: { hourly: Hourly[] }) {
@@ -43,10 +43,10 @@ function HourlyBars({ hourly }: { hourly: Hourly[] }) {
               height: `${Math.max(4, (h.median_wait_min / max) * 40)}px`,
               background:
                 h.median_wait_min >= 60
-                  ? "var(--ttsh-red)"
+                  ? "var(--mediq-red)"
                   : h.median_wait_min >= 30
-                    ? "var(--ttsh-gold)"
-                    : "var(--ttsh-green)",
+                    ? "var(--mediq-gold)"
+                    : "var(--mediq-green)",
             }}
           />
         ))}
@@ -75,7 +75,7 @@ export default function StationsDashboard() {
       .catch((err) => setError(String(err)));
   }, []);
 
-  if (error) return <p style={{ color: "var(--ttsh-red)" }}>{error}</p>;
+  if (error) return <p style={{ color: "var(--mediq-red)" }}>{error}</p>;
   if (!overview)
     return <p className="muted">Computing station statistics from 227K events… (first load takes a few seconds)</p>;
 
