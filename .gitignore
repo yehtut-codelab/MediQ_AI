@@ -1,0 +1,25 @@
+# data — never commit patient data or derivatives
+data/
+data/raw/
+data/processed/
+Clean_Dataset/
+docs/
+*.xlsx
+*.parquet
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# node
+node_modules/
+.next/
+
+# local registry db (demo data, includes free-text names)
+backend/registry.db
+
+# artifacts
+backend/models/artifacts/
+*.joblib

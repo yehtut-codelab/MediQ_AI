@@ -1,8 +1,9 @@
-# TTSH Eye Clinic — Agentic Queue & Wait Time Advisor
+# MediQ AI — Digital Twin for Eye Clinic Operations
 
-NUS-ISS Capstone (Team 2). RAG system over historical TTSH Eye Centre wait time events:
-new patient arrivals are matched against nearest historical events in **Qdrant**, and a
-**LangGraph** agent produces an evidence-based wait/queue estimate.
+An agentic RAG system that models eye clinic operations as a digital twin: historical
+wait time events are indexed in **Qdrant**, new patient arrivals are matched against the
+nearest historical events, and a **LangGraph** agent produces an evidence-based wait/queue
+estimate.
 
 📄 Docs: [`docs/SPECIFICATION.md`](docs/SPECIFICATION.md) · [`docs/FRAMEWORK_DECISION.md`](docs/FRAMEWORK_DECISION.md)
 
@@ -26,7 +27,7 @@ pip install -r requirements.txt
 
 ### 3. Place the dataset
 
-Copy `TTSH Oct 25 - 04 May 26 - WaitTimeAdded.xlsx` into `data/raw/` (gitignored).
+Copy the wait time dataset Excel file into `data/raw/` (gitignored).
 
 ### 4. Ingest
 
@@ -39,7 +40,7 @@ python scripts/ingest_waittime.py --recreate      # drop & rebuild collection
 ### 5. Test nearest-event search
 
 ```bash
-python scripts/query_similar.py --clinic "TTSH Eye Centre" --service-type Consultation --hour 9 --dow 3
+python scripts/query_similar.py --clinic "Eye Centre" --service-type Consultation --hour 9 --dow 3
 ```
 
 ### 6. Run the API
@@ -72,10 +73,7 @@ data/raw/                # dataset (gitignored)
 
 ```
 QDRANT_URL=http://localhost:6333
-QDRANT_COLLECTION=ttsh_wait_events
+QDRANT_COLLECTION=mediq_wait_events
 EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 ANTHROPIC_API_KEY=            # optional — template fallback without it
 ```
-"# MediQ_AI" 
-"# MediQ_AI" 
-"# MediQ_AI" 
