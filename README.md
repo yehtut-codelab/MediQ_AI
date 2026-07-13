@@ -77,3 +77,4 @@ EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 ANTHROPIC_API_KEY=            # optional — template fallback without it
 ```
 "# MediQ_AI" 
+"# MediQ_AI" 
