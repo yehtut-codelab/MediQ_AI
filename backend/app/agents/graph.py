@@ -137,14 +137,14 @@ def synthesize(state: EstimateState) -> EstimateState:
     if state["widenings"]:
         base += f" Note: filters were widened {state['widenings']}x due to sparse exact matches."
 
-    if not settings.anthropic_api_key:
+    if not settings.openai_api_key:
         return {"explanation": base}
 
     try:
-        from langchain_anthropic import ChatAnthropic
+        from langchain_openai import ChatOpenAI
 
-        llm = ChatAnthropic(model=settings.llm_model, max_tokens=300,
-                            api_key=settings.anthropic_api_key)
+        llm = ChatOpenAI(model=settings.llm_model, max_tokens=300,
+                          api_key=settings.openai_api_key)
         msg = llm.invoke(
             "Rewrite this hospital wait estimate as one short, warm, patient-friendly "
             "message followed by one staff-facing sentence. Keep every number exactly "

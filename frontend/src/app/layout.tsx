@@ -21,6 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <a href="/stations">Station Map</a>
             <a href="/agent">AI Agent Console</a>
             <a href="/qa">SOP Q&amp;A</a>
+            <a href="/documents">Knowledge Base</a>
           </div>
         </nav>
         <main className="page">{children}</main>

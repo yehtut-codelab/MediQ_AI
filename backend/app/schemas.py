@@ -117,6 +117,18 @@ class RegisteredPatient(BaseModel):
     model_unavailable_reason: str | None = None
 
 
+class DocumentOut(BaseModel):
+    id: str
+    name: str
+    ext: str
+    size_bytes: int
+    status: Literal["uploaded", "processing", "ingested", "failed"]
+    chunk_count: int = 0
+    error_message: str | None = None
+    uploaded_at: datetime
+    ingested_at: datetime | None = None
+
+
 class StationStats(BaseModel):
     service_type: str
     count: int

@@ -1,15 +1,19 @@
 import random
+import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from qdrant_client import models
 
 from app.agents.graph import wait_estimate_graph
+from app.agents.qa_graph import qa_graph
 from app.agents.supervisor_graph import supervisor_graph
 from app.config import settings
 from app.schemas import (
     ArrivalRequest,
+    DocumentOut,
     EstimateResponse,
     ForecastBucket,
     PatientRegistration,
@@ -19,9 +23,11 @@ from app.schemas import (
     SamplePatient,
     SimilarEvent,
 )
-from app.services import livestate, models_service, registry, stations
+from app.services import document_registry, livestate, models_service, registry, stations
 from app.services.pathway import build_pathway, classify
 from app.services.qdrant_service import collection_status, get_client
+from app.services.sop_ingest import SUPPORTED_EXTENSIONS, ingest_file
+from app.services.sop_service import delete_document, ensure_sop_collection
 from app.services.triage import triage
 
 router = APIRouter(prefix="/api/v1")
@@ -355,19 +361,114 @@ class QARequest(BaseModel):
 
 @router.post("/qa/ask")
 def qa_ask(req: QARequest) -> dict:
-    """Placeholder for the SOP & Healthcare Q&A RAG (separate knowledge base,
-    to be connected). Returns the contract the frontend already renders."""
+    """SOP & Healthcare Q&A: a tool-calling LangGraph agent searches the
+    `mediq_sop_docs` Qdrant collection and answers grounded in what it finds.
+    Unlike the other graphs, there is no template fallback here — open-ended
+    reasoning over retrieved text requires an LLM."""
+    if not settings.openai_api_key:
+        raise HTTPException(503, "SOP Q&A requires OPENAI_API_KEY to be configured.")
+
+    from langchain_core.messages import HumanMessage
+
+    result = qa_graph.invoke({"messages": [HumanMessage(req.question)], "citations": []})
+
+    seen: set[tuple[str, str]] = set()
+    sources = []
+    for c in result.get("citations", []):
+        key = (c["title"], c["snippet"])
+        if key not in seen:
+            seen.add(key)
+            sources.append(c)
+
     return {
-        "status": "placeholder",
+        "status": "ok",
         "question": req.question,
-        "answer": (
-            "The SOP & Healthcare knowledge base is not connected yet. "
-            "Once integrated, this endpoint will retrieve relevant SOP passages "
-            "from the dedicated Qdrant collection and generate a grounded answer "
-            "with citations."
-        ),
-        "sources": [],
+        "answer": result["messages"][-1].content,
+        "sources": sources,
     }
+
+
+def _document_out(row) -> DocumentOut:
+    return DocumentOut(
+        id=row["id"], name=row["name"], ext=row["ext"], size_bytes=row["size_bytes"],
+        status=row["status"], chunk_count=row["chunk_count"] or 0,
+        error_message=row["error_message"], uploaded_at=row["uploaded_at"],
+        ingested_at=row["ingested_at"],
+    )
+
+
+@router.get("/documents", response_model=list[DocumentOut])
+def list_documents() -> list[DocumentOut]:
+    """Documents in the SOP knowledge base, newest first — powers the document
+    management page (upload/status/remove)."""
+    return [_document_out(r) for r in document_registry.list_all()]
+
+
+@router.post("/documents/upload", response_model=DocumentOut, status_code=201)
+def upload_document(file: UploadFile = File(...)) -> DocumentOut:
+    """Upload one SOP document (PDF/DOCX/TXT) and ingest it immediately into
+    the `mediq_sop_docs` Qdrant collection."""
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(400, f"Unsupported file type '{ext}'. Allowed: pdf, docx, txt")
+
+    settings.sop_docs_dir.mkdir(parents=True, exist_ok=True)
+    document_id = str(uuid.uuid4())
+    dest = settings.sop_docs_dir / f"{document_id}{ext}"
+    contents = file.file.read()
+    dest.write_bytes(contents)
+
+    document_registry.add(document_id, file.filename or dest.name, str(dest.resolve()),
+                          ext, len(contents), status="processing")
+
+    try:
+        client = get_client()
+        ensure_sop_collection(client)
+        n = ingest_file(client, document_id, Path(file.filename or dest.name).stem, dest)
+        document_registry.update_status(document_id, "ingested", chunk_count=n)
+    except Exception as exc:
+        document_registry.update_status(document_id, "failed", error_message=str(exc))
+
+    return _document_out(document_registry.get(document_id))
+
+
+@router.post("/documents/{document_id}/reingest", response_model=DocumentOut)
+def reingest_document(document_id: str) -> DocumentOut:
+    """Retry ingestion for a document stuck in `failed` (or refresh an existing one)."""
+    row = document_registry.get(document_id)
+    if not row:
+        raise HTTPException(404, "Document not found")
+
+    path = Path(row["file_path"])
+    if not path.exists():
+        document_registry.update_status(document_id, "failed",
+                                        error_message="Source file no longer on disk.")
+        raise HTTPException(404, "Source file no longer on disk — re-upload instead.")
+
+    try:
+        client = get_client()
+        ensure_sop_collection(client)
+        delete_document(client, document_id)
+        n = ingest_file(client, document_id, path.stem, path)
+        document_registry.update_status(document_id, "ingested", chunk_count=n)
+    except Exception as exc:
+        document_registry.update_status(document_id, "failed", error_message=str(exc))
+
+    return _document_out(document_registry.get(document_id))
+
+
+@router.delete("/documents/{document_id}", status_code=204)
+def delete_document_endpoint(document_id: str) -> None:
+    """Remove a document's chunks from Qdrant, its file on disk, and its registry row."""
+    row = document_registry.get(document_id)
+    if not row:
+        raise HTTPException(404, "Document not found")
+
+    delete_document(get_client(), document_id)
+    path = Path(row["file_path"])
+    if path.exists():
+        path.unlink()
+    document_registry.delete(document_id)
 
 
 @router.get("/collection/status")

@@ -23,3 +23,7 @@ backend/registry.db
 # artifacts
 backend/models/artifacts/
 *.joblib
+
+# large local-only reference/model code dump — not part of the app
+models_codes.zip
+models_codes/

@@ -109,26 +109,89 @@ button.secondary:hover { background: var(--mediq-blue-l); border-color: var(--me
 .estimate-card.amber { background: var(--mediq-gold-l); border-left-color: var(--mediq-gold); }
 .estimate-card.red { background: var(--mediq-red-l); border-left-color: var(--mediq-red); }
 
-/* SOP Q&A */
+/* SOP Q&A — full chat page */
+.qa-page {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 150px); min-height: 480px;
+}
+.qa-page .panel-body { flex: 1; display: flex; flex-direction: column; min-height: 0; padding-bottom: 12px; }
+
 .qa-banner {
   background: var(--mediq-gold-l); border-left: 3px solid var(--mediq-gold);
   padding: 9px 12px; border-radius: 3px; font-size: 11px; margin-bottom: 12px;
 }
 .qa-banner code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 2px; }
-.qa-thread { max-height: 420px; overflow-y: auto; }
+
+.qa-toolbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.qa-clear-btn {
+  font-size: 11px; color: #777; background: none; border: 1px solid var(--border);
+  border-radius: 3px; padding: 4px 10px; cursor: pointer;
+}
+.qa-clear-btn:hover { color: var(--mediq-navy); border-color: var(--mediq-navy); }
+
+.qa-thread { flex: 1; overflow-y: auto; padding-right: 4px; }
+
+.qa-empty {
+  height: 100%; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; color: #777; gap: 4px;
+}
+.qa-empty h3 { font-weight: 500; color: #333; font-size: 15px; margin-bottom: 4px; }
+.qa-suggestions { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; width: 100%; max-width: 440px; }
+.qa-suggestion-btn {
+  text-align: left; background: white; border: 1px solid var(--border);
+  border-radius: 6px; padding: 9px 12px; font-size: 12px; color: var(--mediq-blue);
+  cursor: pointer; font-family: inherit;
+}
+.qa-suggestion-btn:hover { background: var(--mediq-blue-l); border-color: var(--mediq-blue); }
+
 .qa-msg { padding: 10px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 13px; }
 .qa-msg.user { background: var(--mediq-blue-l); margin-left: 15%; }
 .qa-msg.assistant { background: #F4F4F2; margin-right: 15%; }
-.qa-role { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #777; margin-bottom: 4px; }
+.qa-msg.error { background: var(--mediq-red-l); border-left: 3px solid var(--mediq-red); margin-right: 15%; }
+.qa-msg-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; gap: 8px; }
+.qa-role { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #777; }
+.qa-time { font-size: 10px; color: #999; white-space: nowrap; }
+.qa-text { white-space: pre-wrap; line-height: 1.5; }
+
+.qa-typing { display: inline-flex; gap: 3px; padding: 4px 0; }
+.qa-typing span {
+  width: 6px; height: 6px; border-radius: 50%; background: #aaa; display: inline-block;
+  animation: qa-bounce 1.2s infinite ease-in-out;
+}
+.qa-typing span:nth-child(2) { animation-delay: 0.15s; }
+.qa-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes qa-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+
 .qa-chip {
   display: inline-block; margin-top: 8px; font-size: 10px;
   background: var(--mediq-gold-l); color: var(--mediq-gold);
   border: 1px solid #E0C97A; border-radius: 2px; padding: 1px 8px;
 }
+
+.qa-sources { margin-top: 8px; }
+.qa-sources summary {
+  cursor: pointer; font-size: 10px; color: #777; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px; list-style: none;
+}
+.qa-sources summary::-webkit-details-marker { display: none; }
+.qa-sources summary::before { content: "▸ "; }
+.qa-sources[open] summary::before { content: "▾ "; }
+.qa-sources-list { margin-top: 6px; }
 .qa-source {
   font-size: 11px; padding: 6px 10px; background: white;
   border: 1px solid var(--border); border-radius: 3px; margin-bottom: 4px;
 }
+
+.qa-input-row { display: flex; gap: 8px; margin-top: 12px; align-items: flex-end; }
+.qa-textarea {
+  flex: 1; resize: none; padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: 3px; font-size: 13px; font-family: inherit; line-height: 1.4;
+  max-height: 140px; overflow-y: auto;
+}
+.qa-send-btn { width: 84px; height: 38px; flex-shrink: 0; }
 
 /* agent console alerts */
 .alert-row {
@@ -171,3 +234,25 @@ button.secondary:hover { background: var(--mediq-blue-l); border-color: var(--me
 }
 .evidence-table td { padding: 6px 8px; border-bottom: 1px solid #E8E8E4; }
 .muted { color: #777; font-size: 12px; }
+
+/* Document management (knowledge base ingestion) */
+.doc-upload {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 14px; border: 1px dashed var(--border); border-radius: 4px;
+  background: #FAFAF8; margin-bottom: 16px;
+}
+.doc-upload input[type="file"] { flex: 1; min-width: 220px; font-size: 12px; }
+.doc-upload-hint { font-size: 11px; color: #777; width: 100%; }
+
+.doc-actions { display: flex; gap: 6px; }
+.btn-small {
+  padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 3px;
+  cursor: pointer; border: 1px solid var(--border); background: white; color: #333;
+}
+.btn-small:hover { border-color: var(--mediq-blue); color: var(--mediq-blue); }
+.btn-small.danger { color: var(--mediq-red); }
+.btn-small.danger:hover { border-color: var(--mediq-red); background: var(--mediq-red-l); }
+.btn-small:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.doc-name { font-weight: 500; }
+.doc-error { color: var(--mediq-red); font-size: 10px; margin-top: 2px; }

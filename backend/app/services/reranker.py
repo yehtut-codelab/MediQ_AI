@@ -42,3 +42,16 @@ def rerank(query_text: str, hits: list[dict], top_n: int = 10) -> list[dict]:
         reverse=True,
     )
     return ranked[:top_n]
+
+
+def rerank_chunks(query_text: str, hits: list[dict], top_n: int = 5) -> list[dict]:
+    """Cross-encoder rerank for arbitrary text chunks (e.g. SOP document retrieval)."""
+    if not hits:
+        return []
+    scores = get_reranker().predict([(query_text, h["text"]) for h in hits])
+    ranked = sorted(
+        ({**h, "rerank_score": float(s)} for h, s in zip(hits, scores)),
+        key=lambda h: h["rerank_score"],
+        reverse=True,
+    )
+    return ranked[:top_n]

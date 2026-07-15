@@ -35,6 +35,13 @@ type Report = {
     };
     bottlenecks: { stations: Station[]; flagged: Station[] };
     forecast: { next_hour_queue_depth: number[]; trend: string };
+    predictive_analysis: {
+      predicted_wait_min: number;
+      predicted_wait_range_min: [number, number];
+      outlook: string;
+      risk_score: number;
+      risk_label: string;
+    };
   };
   recommendations: { priority: number; recommendation: string; impact: string }[];
   alerts: { level: string; message: string }[];
@@ -45,6 +52,12 @@ const STATE_COLOR: Record<string, string> = {
   Medium: "var(--mediq-gold)",
   Low: "var(--mediq-green)",
   unknown: "#999",
+};
+
+const RISK_COLOR: Record<string, string> = {
+  high: "var(--mediq-red)",
+  medium: "var(--mediq-gold)",
+  low: "var(--mediq-green)",
 };
 
 export default function AgentConsole() {
@@ -241,6 +254,42 @@ export default function AgentConsole() {
               </div>
               <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
                 {report.findings.forecast.next_hour_queue_depth.map((v, i) => `+${(i + 1) * 15}m: ${v}`).join(" · ")}
+              </div>
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-head">Predictive Analytics Agent — Synthesis</div>
+            <div className="panel-body">
+              <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
+                <div>
+                  <div className="muted">Outlook</div>
+                  <div className="kpi-secondary" style={{ textTransform: "capitalize" }}>
+                    {report.findings.predictive_analysis.outlook}
+                  </div>
+                </div>
+                <div>
+                  <div className="muted">Operational risk</div>
+                  <div
+                    className="kpi-secondary"
+                    style={{ color: RISK_COLOR[report.findings.predictive_analysis.risk_label], fontWeight: 700 }}
+                  >
+                    {report.findings.predictive_analysis.risk_label.toUpperCase()} (
+                    {report.findings.predictive_analysis.risk_score})
+                  </div>
+                </div>
+                <div>
+                  <div className="muted">Projected wait (next cycle)</div>
+                  <div className="kpi-secondary">
+                    {report.findings.predictive_analysis.predicted_wait_range_min[0].toFixed(0)}
+                    –{report.findings.predictive_analysis.predicted_wait_range_min[1].toFixed(0)} min
+                  </div>
+                </div>
+              </div>
+              <div className="muted" style={{ marginTop: 8, fontSize: 11 }}>
+                Synthesizes waiting-time, bottleneck, queue-depth-forecast, and resource-planning
+                findings — trend-adjusted from the point estimate of{" "}
+                {report.findings.predictive_analysis.predicted_wait_min.toFixed(0)} min.
               </div>
             </div>
           </div>

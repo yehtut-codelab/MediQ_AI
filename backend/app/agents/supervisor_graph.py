@@ -1,15 +1,18 @@
 """Supervisor/Orchestrator multi-agent graph — implements the Agentic AI Framework
 from MediQ_AI_Agents_Architecture.png (Figure 2).
 
-                    ┌─ waiting_time_agent ──┐
-supervisor ─ fan-out┼─ bottleneck_agent ────┼─ result_fusion ─ critique
-                    ├─ resource_planning ───┤        │
-                    └─ predictive_agent ────┘        ▼
-                                       decision_support ─ reporting ─ END
+                    ┌─ waiting_time_agent  ──────┐
+supervisor ─ fan-out┼─ bottleneck_agent ─────────┼─ predictive_agent ─ result_fusion ─ critique
+                    ├─ queue_depth_forecast_agent┤                          │
+                    └─ resource_planning ────────┘                          ▼
+                                                       decision_support ─ reporting ─ END
 
-Specialists run in parallel (LangGraph fan-out/fan-in). Trained models:
-XGBoost (waiting time), per-category HMMs (bottlenecks), LSTM (queue forecast).
-All numbers are computed in code; the optional LLM only phrases the report.
+The first four specialists run in parallel (LangGraph fan-out/fan-in); predictive_agent
+then fans in after all four complete and synthesizes their findings into a combined
+predictive read (trend-adjusted wait projection, uncertainty band, risk score) before
+result_fusion. Trained models: XGBoost (waiting time), per-category HMMs (bottlenecks),
+LSTM (queue forecast). All numbers are computed in code; the optional LLM only phrases
+the report.
 """
 
 import statistics
@@ -125,7 +128,27 @@ def bottleneck_agent(state: SupervisorState) -> SupervisorState:
     }}}
 
 
-# ── Specialist 3: Resource Planning Agent (allocation options) ───────────
+# ── Specialist 3: Queue Depth Forecasting Agent (LSTM queue forecast) ────
+
+def queue_depth_forecast_agent(state: SupervisorState) -> SupervisorState:
+    at, clinic, cat = state["as_of"], state["clinic"], state["category"]
+    feats = livestate.lstm_bucket_features(clinic, cat, at)
+    if feats is None:
+        forecast, trend = [], "no-data"
+    else:
+        forecast = models_service.forecast_queue_depth(feats)
+        current = float(feats[-1][0])
+        trend = ("rising" if forecast and forecast[0] > current * 1.15 else
+                 "falling" if forecast and forecast[0] < current * 0.85 else "stable")
+    return {"findings": {"forecast": {
+        "category": cat,
+        "next_hour_queue_depth": forecast,   # 4 × 15-min buckets
+        "trend": trend,
+        "model_mae": models_service.lstm_meta()["evaluation"]["val_MAE"],
+    }}}
+
+
+# ── Specialist 4: Resource Planning Agent (allocation options) ───────────
 
 def resource_planning_agent(state: SupervisorState) -> SupervisorState:
     at, clinic = state["as_of"], state["clinic"]
@@ -149,23 +172,55 @@ def resource_planning_agent(state: SupervisorState) -> SupervisorState:
     return {"findings": {"resource_planning": {"options": options[:4]}}}
 
 
-# ── Specialist 4: Predictive Analytics Agent (LSTM queue forecast) ───────
+# ── Specialist 5: Predictive Analytics Agent (synthesizes specialists 1-4) ─
 
 def predictive_agent(state: SupervisorState) -> SupervisorState:
-    at, clinic, cat = state["as_of"], state["clinic"], state["category"]
-    feats = livestate.lstm_bucket_features(clinic, cat, at)
-    if feats is None:
-        forecast, trend = [], "no-data"
-    else:
-        forecast = models_service.forecast_queue_depth(feats)
-        current = float(feats[-1][0])
-        trend = ("rising" if forecast and forecast[0] > current * 1.15 else
-                 "falling" if forecast and forecast[0] < current * 0.85 else "stable")
-    return {"findings": {"forecast": {
-        "category": cat,
-        "next_hour_queue_depth": forecast,   # 4 × 15-min buckets
-        "trend": trend,
-        "model_mae": models_service.lstm_meta()["evaluation"]["val_MAE"],
+    """Runs after waiting_time_agent, bottleneck_agent, queue_depth_forecast_agent,
+    and resource_planning_agent fan in. Does not call a trained model itself —
+    it analyzes their combined findings to produce a trend-adjusted wait
+    projection, an uncertainty band derived from the underlying models' own
+    validation error, a near-term outlook, and an overall operational risk score."""
+    f = state["findings"]
+    wt = f["waiting_time"]
+    bn = f["bottlenecks"]
+    qf = f["forecast"]
+    rp = f["resource_planning"]
+
+    # Predictive modeling: trend-adjust the XGBoost point estimate using the LSTM
+    # queue-depth trend, so a rising/falling queue shifts the expected wait.
+    trend_adjustment = {"rising": 1.15, "falling": 0.85, "stable": 1.0, "no-data": 1.0}
+    predicted_wait_min = round(wt["model_estimate_min"] * trend_adjustment[qf["trend"]], 1)
+
+    # Uncertainty estimation: combine the two independent models' validation MAE
+    # (root-sum-square, treating the errors as independent) into a wait range.
+    uncertainty_min = round((wt["model_mae_min"] ** 2 + qf["model_mae"] ** 2) ** 0.5, 1)
+
+    # Performance forecast: near-term outlook combining bottleneck + queue trend signal.
+    high_risk_stations = len(bn["flagged"])
+    outlook = (
+        "deteriorating" if qf["trend"] == "rising" and high_risk_stations > 0 else
+        "improving" if qf["trend"] == "falling" and high_risk_stations == 0 else
+        "stable"
+    )
+
+    # Overall operational risk score (0-1): weighted blend of forecast trend,
+    # bottleneck pressure, and how much resource reallocation is already indicated.
+    risk_score = round(min(1.0,
+        0.4 * (1.0 if qf["trend"] == "rising" else 0.0) +
+        0.4 * min(high_risk_stations / 3, 1.0) +
+        0.2 * min(len(rp["options"]) / 4, 1.0)
+    ), 2)
+
+    return {"findings": {"predictive_analysis": {
+        "predicted_wait_min": predicted_wait_min,
+        "predicted_wait_range_min": [
+            round(max(0.0, predicted_wait_min - uncertainty_min), 1),
+            round(predicted_wait_min + uncertainty_min, 1),
+        ],
+        "uncertainty_min": uncertainty_min,
+        "outlook": outlook,
+        "risk_score": risk_score,
+        "risk_label": "high" if risk_score >= 0.66 else "medium" if risk_score >= 0.33 else "low",
     }}}
 
 
@@ -174,6 +229,7 @@ def predictive_agent(state: SupervisorState) -> SupervisorState:
 def result_fusion(state: SupervisorState) -> SupervisorState:
     f = state["findings"]
     wt = f["waiting_time"]
+    pa = f["predictive_analysis"]
     estimates = [wt["model_estimate_min"]]
     if wt["rag_median_min"] is not None:
         estimates.append(wt["rag_median_min"])
@@ -183,6 +239,11 @@ def result_fusion(state: SupervisorState) -> SupervisorState:
         "sources": {"xgboost": wt["model_estimate_min"], "rag": wt["rag_median_min"]},
         "bottleneck_count": len(f["bottlenecks"]["flagged"]),
         "queue_trend": f["forecast"]["trend"],
+        "predicted_wait_min": pa["predicted_wait_min"],
+        "predicted_wait_range_min": pa["predicted_wait_range_min"],
+        "outlook": pa["outlook"],
+        "risk_score": pa["risk_score"],
+        "risk_label": pa["risk_label"],
     }}
 
 
@@ -251,6 +312,16 @@ def decision_support(state: SupervisorState) -> SupervisorState:
                               "additional capacity now.",
             "impact": "avoid projected queue growth",
         })
+    pa = f["predictive_analysis"]
+    if pa["risk_label"] == "high":
+        decisions.append({
+            "priority": 1,
+            "recommendation": "Predictive analysis flags high overall operational risk "
+                              f"({pa['risk_score']}) — outlook is {pa['outlook']}. Review "
+                              "staffing and station allocation across the clinic now.",
+            "impact": f"projected wait range {pa['predicted_wait_range_min'][0]:.0f}"
+                      f"–{pa['predicted_wait_range_min'][1]:.0f} min if unaddressed",
+        })
     decisions.sort(key=lambda d: d["priority"])
     return {"decisions": decisions[:6]}
 
@@ -268,14 +339,17 @@ def reporting(state: SupervisorState) -> SupervisorState:
         + (f", historical RAG median {fused['sources']['rag']}m" if fused["sources"]["rag"] else "")
         + f"). Queue trend: {fused['queue_trend']}. "
         f"{fused['bottleneck_count']} station(s) flagged as bottlenecks. "
-        f"Confidence: {crit['confidence_label']} ({crit['confidence']})."
+        f"Confidence: {crit['confidence_label']} ({crit['confidence']}). "
+        f"Predictive outlook: {fused['outlook']} (risk {fused['risk_label']}, "
+        f"score {fused['risk_score']}) — projected wait range next cycle "
+        f"{fused['predicted_wait_range_min'][0]:.0f}–{fused['predicted_wait_range_min'][1]:.0f} min."
     )
 
-    if settings.anthropic_api_key:
+    if settings.openai_api_key:
         try:
-            from langchain_anthropic import ChatAnthropic
-            llm = ChatAnthropic(model=settings.llm_model, max_tokens=400,
-                                api_key=settings.anthropic_api_key)
+            from langchain_openai import ChatOpenAI
+            llm = ChatOpenAI(model=settings.llm_model, max_tokens=400,
+                              api_key=settings.openai_api_key)
             summary = llm.invoke(
                 "Rewrite this clinic operations summary for a nurse manager. Keep every "
                 f"number exactly as given, two short paragraphs max:\n\n{summary}"
@@ -306,6 +380,7 @@ def build_supervisor_graph():
     g.add_node("supervisor", supervisor)
     g.add_node("waiting_time_agent", waiting_time_agent)
     g.add_node("bottleneck_agent", bottleneck_agent)
+    g.add_node("queue_depth_forecast_agent", queue_depth_forecast_agent)
     g.add_node("resource_planning_agent", resource_planning_agent)
     g.add_node("predictive_agent", predictive_agent)
     g.add_node("result_fusion", result_fusion)
@@ -315,9 +390,11 @@ def build_supervisor_graph():
 
     g.set_entry_point("supervisor")
     for specialist in ("waiting_time_agent", "bottleneck_agent",
-                       "resource_planning_agent", "predictive_agent"):
+                       "queue_depth_forecast_agent", "resource_planning_agent"):
         g.add_edge("supervisor", specialist)          # parallel fan-out
-        g.add_edge(specialist, "result_fusion")       # fan-in
+        g.add_edge(specialist, "predictive_agent")    # fan-in — predictive_agent
+                                                        # runs once all four complete
+    g.add_edge("predictive_agent", "result_fusion")
     g.add_edge("result_fusion", "critique")
     g.add_edge("critique", "decision_support")
     g.add_edge("decision_support", "reporting")
