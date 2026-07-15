@@ -20,9 +20,11 @@ simulate against.
 - Per-category Gaussian HMM — congestion state (Low/Medium/High)
 - LSTM — 15-minute-bucket queue-depth forecast
 
-**RAG evidence layer** (Qdrant + cross-encoder reranker) retrieves the nearest historical
-visit events for a new arrival, giving every estimate a grounded, inspectable evidence set
-alongside the model prediction.
+**RAG evidence layer** (Qdrant + OpenAI embeddings + local cross-encoder reranker) retrieves
+the nearest historical visit events for a new arrival, giving every estimate a grounded,
+inspectable evidence set alongside the model prediction. Embeddings use the same OpenAI
+account/API key as the LLM phrasing steps and the SOP Q&A agent (`OPENAI_API_KEY` is
+therefore required everywhere, not just for LLM phrasing — see Environment below).
 
 **Agentic orchestration** — two LangGraph graphs:
 
@@ -52,14 +54,16 @@ alongside the model prediction.
 
 Both graphs optionally call GPT to phrase the final explanation/report in plain language —
 every number in that text is computed upstream by code/models, and both graphs fall back to a
-template summary if no API key is configured (the system runs fully without an LLM).
+template summary if that specific call fails. This is now only an error-recovery fallback,
+not a "run without a key" mode: `OPENAI_API_KEY` is required end-to-end because retrieval
+itself calls the OpenAI embeddings API before either graph reaches the phrasing step.
 
 - **SOP & Healthcare Q&A agent** (`agents/qa_graph.py`) — the one genuinely tool-calling LLM
   agent in the app: `agent ⇄ tools` (LangGraph ReAct loop). The LLM decides whether/what to
   search, can issue repeated searches with refined queries, and reasons over retrieved SOP
   passages rather than rephrasing pre-computed numbers. Retrieval hits a dedicated
-  `mediq_sop_docs` Qdrant collection (same local embedder + cross-encoder reranker as the
-  wait-time RAG). Unlike the other two graphs, this one **requires** `OPENAI_API_KEY` —
+  `mediq_sop_docs` Qdrant collection (same OpenAI embedder + local cross-encoder reranker as
+  the wait-time RAG). Like the other two graphs, this one **requires** `OPENAI_API_KEY` —
   open-ended reasoning over free-text documents has no deterministic fallback.
 
 ## Quick Start — Phase 1 (Excel → Qdrant → nearest-event search)
@@ -84,23 +88,28 @@ pip install -r requirements.txt
 
 Copy the wait time dataset Excel file into `data/raw/` (gitignored).
 
-### 4. Ingest
+### 4. Set your OpenAI API key
+
+`OPENAI_API_KEY` must be set in `backend/.env` **before ingesting** — embeddings are computed
+via the OpenAI API (no offline fallback). See Environment below.
+
+### 5. Ingest
 
 ```bash
-python scripts/ingest_waittime.py                 # full run (~237K events)
+python scripts/ingest_waittime.py                 # full run (~237K events, calls OpenAI embeddings API)
 python scripts/ingest_waittime.py --limit 5000    # smoke test
-python scripts/ingest_waittime.py --recreate      # drop & rebuild collection
+python scripts/ingest_waittime.py --recreate      # drop & rebuild collection (needed if you
+                                                    # previously ingested with a different
+                                                    # embedding model/dimension)
 ```
 
-### 5. Test nearest-event search
+### 6. Test nearest-event search
 
 ```bash
 python scripts/query_similar.py --clinic "Eye Centre" --service-type Consultation --hour 9 --dow 3
 ```
 
-### 6. (Optional) Ingest SOP documents for the Q&A agent
-
-Requires `OPENAI_API_KEY` set in `backend/.env` — see Environment below.
+### 7. (Optional) Ingest SOP documents for the Q&A agent
 
 ```bash
 mkdir -p ../data/sop_docs   # drop PDF/DOCX/TXT SOP documents here (gitignored)
@@ -108,7 +117,7 @@ python scripts/ingest_sop_docs.py
 python scripts/ingest_sop_docs.py --recreate   # drop & rebuild the SOP collection
 ```
 
-### 7. Run the API
+### 8. Run the API
 
 ```bash
 uvicorn app.main:app --reload --port 8000
@@ -172,11 +181,16 @@ data/sop_docs/           # SOP/procedure PDFs, DOCX, TXT for the Q&A agent (giti
 ```
 QDRANT_URL=http://localhost:6333
 QDRANT_COLLECTION=mediq_wait_events
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 DATA_FILE=../data/raw/TTSH Oct 25 - 04 May 26 - WaitTimeAdded.xlsx
-OPENAI_API_KEY=               # optional for the other two graphs (template fallback without it);
-                              # required for the SOP & Healthcare Q&A agent
-LLM_MODEL=gpt-5.5             # OpenAI model used wherever an LLM is called
+
+# Required everywhere — embeddings (wait-event + SOP RAG search) and LLM phrasing/Q&A
+# all call the OpenAI API. There is no local/offline fallback.
+OPENAI_API_KEY=
+LLM_MODEL=gpt-5.5                    # OpenAI model used wherever an LLM is called
+EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_DIM=1536                   # must match EMBEDDING_MODEL's output size —
+                                      # changing either requires --recreate on both
+                                      # Qdrant collections and a full re-ingest
 CORS_ORIGINS=http://localhost:3000
 QDRANT_SOP_COLLECTION=mediq_sop_docs
 SOP_DOCS_DIR=../data/sop_docs

@@ -8,8 +8,8 @@ class Settings(BaseSettings):
 
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "mediq_wait_events"
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    embedding_dim: int = 384
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dim: int = 1536
     data_file: Path = Path("../data/raw/TTSH Oct 25 - 04 May 26 - WaitTimeAdded.xlsx")
     openai_api_key: str = ""
     llm_model: str = "gpt-5.5"

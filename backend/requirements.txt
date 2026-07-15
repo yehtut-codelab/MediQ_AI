@@ -16,6 +16,7 @@ langgraph>=0.2
 langchain-core>=0.3
 langchain-qdrant>=0.2
 langchain-openai>=0.2
+openai>=1.50
 langchain-text-splitters>=0.3
 pypdf>=4.0
 python-docx>=1.1

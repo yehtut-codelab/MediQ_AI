@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tqdm import tqdm
 
 from app.config import settings
-from app.services.embedder import get_model
+from app.services.embedder import embed_texts
 from app.services.preprocess import event_sentence, load_clean_events
 from app.services.qdrant_service import (
     collection_status,
@@ -47,8 +47,9 @@ def main() -> None:
           f"({df['wait_start'].min():%Y-%m-%d} -> {df['wait_start'].max():%Y-%m-%d}), "
           f"median wait {df['wait_min'].median():.1f} min")
 
-    print(f"Loading embedding model {settings.embedding_model} ...")
-    model = get_model()
+    print(f"Using embedding model {settings.embedding_model} ...")
+    if not settings.openai_api_key:
+        sys.exit("OPENAI_API_KEY must be set — embeddings are computed via the OpenAI API.")
 
     client = get_client()
     ensure_collection(client, recreate=args.recreate)
@@ -57,8 +58,7 @@ def main() -> None:
     for start in tqdm(range(0, len(df), EMBED_CHUNK), desc="Embed + upsert", unit="chunk"):
         chunk = df.iloc[start : start + EMBED_CHUNK]
         sentences = [event_sentence(row) for _, row in chunk.iterrows()]
-        vectors = model.encode(sentences, batch_size=256,
-                               normalize_embeddings=True).tolist()
+        vectors = embed_texts(sentences)
         total += upsert_events(client, chunk, vectors)
 
     status = collection_status(client)
